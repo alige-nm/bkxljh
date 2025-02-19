@@ -3,27 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>膀胱训练计划</title>
+    <title>膀胱魔鬼训练计划</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #d0e8ff; text-align: center; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: auto; padding: 20px; }
-        h1 { color: #005baa; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .box { display: block; background-color: #69bff8; color: white; text-decoration: none; padding: 20px; border-radius: 8px; font-size: 18px; }
-        .box:hover { background-color: #3a91d8; }
-        button { padding: 10px 20px; font-size: 16px; margin: 5px; border: none; cursor: pointer; border-radius: 5px; }
-        .task-list { text-align: left; margin-top: 20px; }
-        .task-list li { margin-bottom: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(45deg, #ff7c7c, #ffb199);
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            color: #fff;
+        }
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 4px #000;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .box {
+            display: block;
+            background-color: #ff6161;
+            color: white;
+            text-decoration: none;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .box:hover {
+            background-color: #d74646;
+            transform: scale(1.05);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: none;
+            background-color: #f25454;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #d74646;
+        }
+        .task-panel, .task-list {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .task-list li {
+            margin-bottom: 10px;
+        }
+        #punishmentResult {
+            font-weight: bold;
+            color: #fffb96;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .dynamic {
+            animation: bounce 0.5s infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>膀胱训练计划</h1>
+        <h1>膀胱魔鬼训练计划</h1>
         <div class="grid">
             <a href="#" onclick="showPage('tasks')" class="box">每日任务</a>
             <a href="#" onclick="showPage('points')" class="box">积分系统</a>
             <a href="#" onclick="showPage('toilet')" class="box">如厕申请</a>
             <a href="#" onclick="showPage('punishments')" class="box">惩罚与奖励</a>
+            <a href="#" onclick="recordFeeling()" class="box dynamic">记录感受</a>
         </div>
 
         <div id="tasks" style="display:none;">
@@ -48,12 +110,26 @@
             <button onclick="randomPunishment()">随机任务</button>
             <p id="punishmentResult"></p>
         </div>
+
+        <div id="feeling" style="display:none;">
+            <h2>记录感受</h2>
+            <textarea id="feelingInput" rows="5" cols="30" placeholder="记录你的感受..."></textarea>
+            <br>
+            <button onclick="saveFeeling()">保存</button>
+        </div>
     </div>
-        <script>
+
+    <script>
         let points = localStorage.getItem('points') ? parseInt(localStorage.getItem('points')) : 0;
         let toiletCount = localStorage.getItem('toiletCount') ? parseInt(localStorage.getItem('toiletCount')) : 3;
-        
+
         const tasks = [
+            { text: "多喝500ml水", points: 20 },
+            { text: "忍住尿意30分钟", points: 25 },
+            { text: "站立不动10分钟", points: 15 },
+            { text: "抱水瓶蹲下20次", points: 30 },
+            { text: "深蹲50次", points: 50 }
+            { text: "揉膀胱5分钟", points: 10 },
             { text: "揉膀胱5分钟", points: 10 },
             { text: "按压膀胱10次", points: 15 },
             { text: "多喝500ml水", points: 20 },
@@ -77,6 +153,12 @@
         ];
 
         const punishments = [
+            "喝300ml水然后深蹲20次",
+            "按压膀胱30秒，重复3次",
+            "减少如厕机会1次",
+            "跪姿保持10分钟",
+            "积分直接扣50！",
+            "连续写500字不得停"
             "按压膀胱30秒",
             "深蹲50次",
             "跳绳100次",
@@ -103,26 +185,26 @@
                 const li = document.createElement("li");
                 const btn = document.createElement("button");
                 btn.innerText = `${task.text} (+${task.points}分)`;
-                btn.onclick = () => completeTask(task.points);
+                btn.onclick = () => completeTask(task);
                 li.appendChild(btn);
                 taskList.appendChild(li);
             });
 
-            setTimeout(randomMandatoryTask, 2000);
+            setInterval(randomMandatoryTask, 5000); // 每5秒触发随机任务
         });
 
         function showPage(pageId) {
             document.querySelectorAll('.container > div').forEach(div => {
-                if (div.id !== "tasks" && div.id !== "points" && div.id !== "toilet" && div.id !== "punishments") return;
-                div.style.display = (div.id === pageId) ? "block" : "none";
+                div.style.display = div.id === pageId ? "block" : "none";
             });
         }
 
-        function completeTask(amount) {
-            points += amount;
+        function completeTask(task) {
+            const randomPoints = Math.floor(Math.random() * 11) - 5; // 随机增减 -5到+5积分
+            points += task.points + randomPoints;
             localStorage.setItem('points', points);
             document.getElementById("points-value").innerText = points;
-            alert("任务完成，积分变化: " + amount);
+            alert(`任务完成！积分变化: ${task.points} + ${randomPoints}`);
         }
 
         function applyToilet() {
@@ -146,12 +228,27 @@
 
         function randomPunishment() {
             const punishment = punishments[Math.floor(Math.random() * punishments.length)];
-            document.getElementById("punishmentResult").innerText = "随机任务: " + punishment;
+            document.getElementById("punishmentResult").innerText = "你的惩罚: " + punishment;
         }
 
         function randomMandatoryTask() {
             const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
-            alert("你必须完成任务: " + randomTask.text);
+            alert("魔鬼任务降临: " + randomTask.text + "，快去完成！");
+        }
+
+        function recordFeeling() {
+            showPage("feeling");
+        }
+
+        function saveFeeling() {
+            const feeling = document.getElementById("feelingInput").value.trim();
+            if (!feeling) {
+                alert("请记录你的感受，否则惩罚加倍！");
+                randomPunishment(); // 强制惩罚
+                return;
+            }
+            alert("感受记录成功！谢谢你的反馈！");
+            showPage("tasks");
         }
     </script>
 </body>
